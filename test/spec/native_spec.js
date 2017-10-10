@@ -1,19 +1,32 @@
-import { setNativeTargeting } from 'src/native';
+import { fireNativeTrackers, setNativeTargeting } from 'src/native';
+
+const bid = {
+  native: {
+    title: 'Native Creative',
+    body: 'Cool description great stuff',
+    cta: 'Do it',
+    sponsoredBy: 'AppNexus',
+    clickUrl: 'https://www.link.example',
+    clickTrackers: ['https://tracker.example'],
+    impressionTrackers: ['https://impression.example'],
+  }
+};
 
 describe('native.js', () => {
-  it('builds click url', () => {
-    const bid = {
-      native: {
-        clickUrl: 'https://www.link.example',
-        clickTrackers: ['https://tracker.example']
-      }
-    };
-
+  it('sets native targeting keys', () => {
     const targeting = setNativeTargeting(bid);
-    const decodedUrl = decodeURIComponent(targeting.hb_native_linkurl);
+    expect(targeting.hb_native_title).to.equal(bid.native.title);
+    expect(targeting.hb_native_body).to.equal(bid.native.body);
+    expect(targeting.hb_native_linkurl).to.equal(bid.native.clickUrl);
+  });
 
-    expect(decodedUrl).equal(
-      'https://www.link.example?https://tracker.example'
-    );
+  it('fires impression trackers', () => {
+    const fired = fireNativeTrackers({}, bid);
+    expect(fired.length).to.equal(1);
+  });
+
+  it('fires click trackers', () => {
+    const fired = fireNativeTrackers({ action: 'click' }, bid);
+    expect(fired.length).to.equal(1);
   });
 });

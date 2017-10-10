@@ -97,23 +97,18 @@ export function nativeBidIsValid(bid) {
  * Native responses may have impression trackers. This retrieves the
  * impression tracker urls for the given ad object and fires them.
  */
-export function fireNativeImpressions(adObject) {
-  const impressionTrackers =
-    adObject['native'] && adObject['native'].impressionTrackers;
+export function fireNativeTrackers(message, adObject) {
+  let trackers;
 
-  (impressionTrackers || []).forEach(tracker => {
-    triggerPixel(tracker);
-  });
-}
+  if (message.action === 'click') {
+    trackers = adObject['native'] && adObject['native'].clickTrackers;
+  } else {
+    trackers = adObject['native'] && adObject['native'].impressionTrackers;
+  }
 
-/**
- * Builds native click tracking url
- * @param {Object} bid
- * @return {string} url
- */
-function buildClickTrackerUrl(url, bid) {
-  const clickTrackers = bid['native'] && bid['native'].clickTrackers
-  return encodeURIComponent(`${url}?${clickTrackers[0]}`);
+  (trackers || []).forEach(triggerPixel);
+
+  return trackers;
 }
 
 /**
@@ -126,13 +121,7 @@ export function setNativeTargeting(bid) {
 
   Object.keys(bid['native']).forEach(asset => {
     const key = NATIVE_KEYS[asset];
-
-    let value = bid['native'][asset];
-
-    if (asset === 'clickUrl') {
-      value = buildClickTrackerUrl(value, bid);
-    }
-
+    const value = bid['native'][asset];
     if (key) {
       keyValues[key] = value;
     }
